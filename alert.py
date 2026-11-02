@@ -94,6 +94,11 @@ def de(x):
     return "{:,.2f}".format(x).replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+def pct(x):
+    """+4.8 -> '+4,8 %'"""
+    return ("%+.1f %%" % x).replace(".", ",")
+
+
 def money(usd):
     """'304,00 $ (≈ 271,02 €)'"""
     return "%s $ (≈ %s €)" % (de(usd), de(eur(usd)))
@@ -196,7 +201,7 @@ def premarket(cfg):
     name_of = names()
     for h in pick:
         i = info[h["symbol"]]
-        pre = "" if i["pct"] is None else ", letzter Tag %+.1f %%" % i["pct"]
+        pre = "" if i["pct"] is None else ", letzter Tag " + pct(i["pct"])
         lines.append("")
         lines.append("%s: %s%s" % (head(h["symbol"], name_of), money(h["price"]), pre))
         lines.append("  Muster: " + "; ".join(EXPLAIN.get(s, s) for s in h["setups"]))
@@ -228,7 +233,7 @@ def growth_list(cfg):
                  doc["matched"], doc["screened"], top[0]["years"])]
     for r in top:
         i = info[r["symbol"]]
-        day = "" if i["pct"] is None else ", letzter Tag %+.1f %%" % i["pct"]
+        day = "" if i["pct"] is None else ", letzter Tag " + pct(i["pct"])
         lines.append("")
         lines.append("%s: %s%s" % ("%s (%s)" % (name_of.get(r["symbol"], r["sec_name"].title()), r["symbol"]),
                                     money(i["price"]), day))
@@ -267,8 +272,13 @@ def opening(cfg):
         stop = math.floor((h["or_high"] + h["or_low"]) / 2 * 100) / 100   # range midpoint, rounded down
         target = math.ceil((h["price"] + r_mult * (h["price"] - stop)) * 100) / 100
         n, loss = size(h["price"], stop, cfg)
-        if n >= 1:
-            rows.append(dict(h, stop=stop, target=target, shares=n, max_loss_eur=round(loss, 2)))
+        if n < 1:
+            continue
+        gain = n * eur(target - h["price"]) - 2 * cfg.get("fee_per_order_eur", 1)
+        if gain < loss:
+            continue   # the fees eat the edge: the gain at the target is smaller than the loss at the stop
+        rows.append(dict(h, stop=stop, target=target, shares=n, max_loss_eur=round(loss, 2), gain_eur=gain))
+    rows.sort(key=lambda r: -r["gain_eur"])   # the biggest possible gain within your loss limit first
     rows = rows[:MAX_ITEMS]
     info = news_for([r["symbol"] for r in rows])
     name_of = names()
@@ -292,13 +302,13 @@ def opening(cfg):
             cfg.get("max_share_price_eur", 500)))
     for r in rows:
         i = info[r["symbol"]]
-        pct = "" if i["pct"] is None else ", heute %+.1f %%" % i["pct"]
+        today_pct = "" if i["pct"] is None else ", heute " + pct(i["pct"])
         brk = datetime.datetime.combine(datetime.date.fromisoformat(day),
                                         datetime.datetime.strptime(r["bar_start"], "%H:%M").time())
         lines.append("")
         lines.append("%s" % head(r["symbol"], name_of))
         lines.append("  Kurs %s, Ausbruch %s Uhr%s" % (money(r["price"]), vienna(brk + datetime.timedelta(minutes=5)),
-                                                       pct))
+                                                       today_pct))
         lines.append("  Stückzahl: %d (≈ %s € einsetzen)" % (r["shares"], de(r["shares"] * eur(r["price"]))))
         lines.append("  Stop-Loss: %s  -> sofort in Trade Republic setzen" % money(r["stop"]))
         lines.append("  Ziel: %s" % money(r["target"]))
