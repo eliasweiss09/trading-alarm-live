@@ -1,0 +1,66 @@
+name: Trading alerts
+
+# Public repository: GitHub Actions minutes are free. The ntfy topic and the
+# SEC contact live only in the repository secrets NTFY_TOPIC and SEC_USER_AGENT.
+#
+# GitHub cron runs in UTC. Each slot appears twice so it hits the same
+# New York time in summer and winter; alert.py skips the run that is off.
+#   8:15 New York  pre-market lists                  12:15 / 13:15 UTC
+#   9:55 New York  breakouts, then sell checks every minute until 13:00
+#                                                    13:55 / 14:55 UTC
+#  12:55 New York  sell checks every minute until 16:00
+#                                                    16:55 / 17:55 UTC
+# GitHub often starts scheduled runs 5 to 15 minutes late.
+on:
+  schedule:
+    - cron: "15 12,13 * * 1-5"
+    - cron: "55 13,14 * * 1-5"
+    - cron: "55 16,17 * * 1-5"
+  push:
+    branches: [main]   # each upload sends one test push
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "auto, premarket, open, growth or test"
+        default: "test"
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: New York date
+        id: day
+        run: echo "day=$(TZ=America/New_York date +%F)" >> "$GITHUB_OUTPUT"
+      # The breakout list is kept for the day so the afternoon sell checks know it.
+      - uses: actions/cache/restore@v4
+        with:
+          path: trader/today.json
+          key: today-${{ steps.day.outputs.day }}
+
+      - name: Lists and breakouts
+        if: github.event.schedule != '55 16,17 * * 1-5'
+        env:
+          MODE: >-
+            ${{ github.event_name == 'push' && 'test' || github.event.inputs.mode || 'auto' }}
+        run: python alert.py --mode "$MODE"
+      - uses: actions/cache/save@v4
+        if: hashFiles('trader/opened.flag') != ''
+        continue-on-error: true
+        with:
+          path: trader/today.json
+          key: today-${{ steps.day.outputs.day }}
+      - name: Sell checks every minute until 13:00 New York
+        if: hashFiles('trader/opened.flag') != ''
+        run: python alert.py --mode watch --until 13:00
+
+      - name: Sell checks every minute until 16:00 New York
+        if: github.event.schedule == '55 16,17 * * 1-5'
+        run: python alert.py --mode watch --until 16:00 --start-between 12:45-13:30

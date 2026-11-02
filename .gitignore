@@ -1,0 +1,11 @@
+__pycache__/
+trader/state/
+trader/universe.txt
+trader/watchlist.json
+trader/today.json
+trader/opened.flag
+trader/prices.json
+trader/orders.json
+trader/plan.json
+trader/entry.json
+trader/portfolio.json

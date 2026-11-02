@@ -1,0 +1,23 @@
+{
+  "broker_name": "Trade Republic",
+  "currency": "EUR",
+  "budget_eur": 1000,
+  "max_position_pct": 75,
+  "min_share_price_eur": 6,
+  "max_share_price_eur": 500,
+  "max_loss_per_trade_eur": 20,
+  "max_daily_loss_eur": 100,
+  "fee_per_order_eur": 1,
+  "target_r": 2,
+  "protect_after_r": 1,
+  "protect_keep_pct": 50,
+  "max_trades_per_day": 3,
+  "no_entries_before": "09:45",
+  "no_entries_after": "15:30",
+  "flat_by": "15:55",
+  "blocked": [],
+  "allow_options": false,
+  "allow_margin": false,
+  "allow_short": false,
+  "sec_user_agent": ""
+}
