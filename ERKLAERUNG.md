@@ -37,12 +37,12 @@ ntfy.sh  ──Push──►  ntfy-App am Handy
 
 ## 2. Die Nachrichten pro Börsentag
 
-Uhrzeiten in österreichischer Zeit (Winter und Sommer gleich). In den zwei Wochen, in denen nur die USA die Uhr umgestellt haben (zum Beispiel 15. bis 26. März 2027), kommt alles eine Stunde früher. GitHub startet die Läufe oft 5 bis 15 Minuten später. An Wochenenden und US-Feiertagen kommt nichts.
+Uhrzeiten in österreichischer Zeit (Winter und Sommer gleich). In den zwei Wochen, in denen nur die USA die Uhr umgestellt haben (zum Beispiel 15. bis 26. März 2027), kommt alles eine Stunde früher. GitHub startet die Läufe oft 5 bis 60 Minuten später. Das Programm wartet dann bzw. holt nach, und die Nachmittags-Prüfung startet direkt nach der Vormittags-Prüfung. An Wochenenden und US-Feiertagen kommt nichts.
 
 Alle Preise stehen **in Dollar und umgerechnet in Euro** (Tageskurs Euro/Dollar). Jede Nachricht erklärt am Anfang, was sie bedeutet, und sagt Schritt für Schritt, was in Trade Republic zu tun ist.
 
 ### a) ca. 14:15: „Vorbörse“ (Day Trading, zum Beobachten)
-- Prüft **alle rund 3.400 bis 5.900 US-Aktien** anhand der Schlusskurse.
+- Prüft **rund 900 große US-Firmen** (S&P 500 und S&P MidCap 400) anhand der Schlusskurse. Nur diese, weil es sie sicher bei Trade Republic gibt. Das gilt auch für die Ausbrüche und die Wachstums-Liste.
 - Behält nur Aktien **von 6 bis 500 € pro Stück**, die viel gehandelt werden (mehr als 1 Million Stück am Tag).
 - Sucht **Muster**, zum Beispiel „höchster Schlusskurs seit 20 Tagen“ oder „stark gefallen“ (RSI unter 30).
 - Schickt **6 Aktien** mit Kurs, Tagesbewegung und einer Schlagzeile, in der die Firma vorkommt. Das ist noch kein Kaufsignal.
@@ -132,5 +132,7 @@ Jeder Hinweis erklärt, **was passiert ist**, **warum verkaufen**, das **aktuell
 | `tools/scan.py` | Aktien-Scanner (Muster, Ausbrüche, Börsenkalender bis Ende 2027) |
 | `tools/news.py` | Schlagzeilen, Firmenmeldungen und Kursbewegung |
 | `growth.py` | Wachstums-Liste aus den SEC-Daten |
+| `trader/tradable.txt` | Die rund 900 geprüften Aktien (S&P 500 und MidCap 400, alle bei Trade Republic) |
+| `tools/indexlist.py` | Erstellt `trader/tradable.txt` neu aus den Wikipedia-Listen |
 | `trader/config.json` | Regeln |
 | `.github/workflows/alerts.yml` | Zeitplan für GitHub |

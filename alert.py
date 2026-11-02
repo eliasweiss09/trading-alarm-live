@@ -67,6 +67,30 @@ def names():
     return out
 
 
+def tradable():
+    """Tickers in trader/tradable.txt (S&P 500 and MidCap 400, all on Trade Republic)."""
+    try:
+        with open(os.path.join(HERE, "trader", "tradable.txt"), encoding="utf-8") as fh:
+            return {x.strip() for x in fh if x.strip() and not x.startswith("#")}
+    except OSError:
+        return set()
+
+
+def build_universe():
+    """Download the US stock list, then keep only stocks Trade Republic offers."""
+    run(["scan.py", "universe", "--json"])
+    keep = tradable()
+    path = os.path.join(HERE, "trader", "universe.txt")
+    if not keep:
+        print("trader/tradable.txt missing: scanning every US stock", file=sys.stderr)
+        return
+    with open(path, encoding="utf-8") as fh:
+        rows = [x for x in fh if x.split("|", 1)[0] in keep]
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.writelines(rows)
+    print("universe limited to Trade Republic stocks: %d" % len(rows), file=sys.stderr)
+
+
 def head(sym, name_of):
     return "%s (%s)" % (name_of.get(sym, sym), sym)
 
@@ -181,7 +205,7 @@ def size(price, stop, cfg):
 # ---------------------------------------------------------------- the daily lists
 
 def premarket(cfg):
-    run(["scan.py", "universe", "--json"])
+    build_universe()
     doc = run(["scan.py", "daily", "--json"])
     if not doc:
         return "Vorbörse: Scan fehlgeschlagen", "Der Tagesscan lieferte keine Daten. Morgen neuer Versuch."
@@ -194,7 +218,8 @@ def premarket(cfg):
     pick = trend + weak
     info = news_for([h["symbol"] for h in pick])
     lines = ["Was das ist: Aktien, deren Kursverlauf gestern ein Muster zeigte. Noch kein Kaufsignal. "
-             "Ob eine davon heute ausbricht, kommt um ca. 15:55.",
+             "Ob eine davon heute ausbricht, kommt um ca. 15:55. Nur große US-Firmen (S&P 500 und "
+             "MidCap 400), die es bei Trade Republic gibt.",
              "%s von %s viel gehandelten Aktien passen (Schlusskurse bis %s, %g-%g € pro Aktie)." % (
                  c.get("hits", len(doc.get("hits", []))), c.get("scanned", "?"),
                  (doc.get("hits") or [{}])[0].get("close_date", "letzter Schluss"),
@@ -215,9 +240,12 @@ def premarket(cfg):
 
 def growth_list(cfg):
     """10 stocks with long, steady profit growth (SEC filings)."""
-    doc = run(["../growth.py", "--top", "25"], timeout=600)
+    doc = run(["../growth.py", "--top", "80"], timeout=600)
     if not doc or not doc.get("top"):
         return "Wachstums-Liste: keine Daten", "Die SEC-Daten kamen heute nicht an. Morgen neuer Versuch."
+    keep = tradable()
+    if keep:   # only stocks Trade Republic offers
+        doc["top"] = [r for r in doc["top"] if r["symbol"] in keep][:25]
     info = news_for([r["symbol"] for r in doc["top"]])
     top = [r for r in doc["top"] if info[r["symbol"]]["price"] is not None
            and price_ok(info[r["symbol"]]["price"], cfg)
@@ -260,7 +288,8 @@ def growth_list(cfg):
 
 
 def opening(cfg):
-    uni = run(["scan.py", "universe", "--json"])  # each cloud run starts empty
+    build_universe()  # each cloud run starts empty
+    uni = {"count": len(names())}
     doc = run(["scan.py", "orb", "--json", "--max-confirm", "150"])
     if not doc:
         return "Eröffnung: kein Scan", "Der Ausbruch-Scan lief nicht (Markt zu, zu früh oder keine Daten)."
@@ -300,11 +329,12 @@ def opening(cfg):
     fee = cfg.get("fee_per_order_eur", 1)
     lines = ["Was das ist: Aktien, die nach Börsenstart über ihre Spanne der ersten 15 Minuten gestiegen "
              "sind (Ausbruch). Die Stückzahl ist so gewählt, dass du beim Stop höchstens %g € verlierst, "
-             "inkl. %g € Gebühren." % (cfg.get("max_loss_per_trade_eur", 20), 2 * fee),
+             "inkl. %g € Gebühren. Nur große US-Firmen (S&P 500 und MidCap 400), die es bei Trade "
+             "Republic gibt." % (cfg.get("max_loss_per_trade_eur", 20), 2 * fee),
              "%s von %s Aktien sind ausgebrochen, %d %s zu deinen Regeln. 1 € = %s $." % (
                  c.get("hits", len(doc.get("hits", []))), c.get("scanned", "?"), len(rows),
                  "passt" if len(rows) == 1 else "passen", ("%.4f" % RATE).replace(".", ","))]
-    if coverage < 1000:
+    if coverage < 450:   # about half of the ~900 Trade Republic stocks
         lines.append("ACHTUNG: Heute konnten nur %s Aktien geprüft werden (die kostenlose Datenquelle hat "
                      "geblockt). Die Liste ist deshalb unvollständig." % coverage)
     if not rows:
