@@ -186,6 +186,7 @@ def premarket(cfg):
     if not doc:
         return "Vorbörse: Scan fehlgeschlagen", "Der Tagesscan lieferte keine Daten. Morgen neuer Versuch."
     c = doc.get("counts", {})
+    print("daily counts: %s" % json.dumps(c), file=sys.stderr)   # diagnostics for the run log
     hits = [h for h in doc.get("hits", []) if price_ok(h["price"], cfg)
             and h["symbol"] not in cfg.get("blocked", [])]
     trend = [h for h in hits if set(h["setups"]) & set(TREND)][:4]
@@ -259,10 +260,17 @@ def growth_list(cfg):
 
 
 def opening(cfg):
-    run(["scan.py", "universe", "--json"])  # each cloud run starts empty
+    uni = run(["scan.py", "universe", "--json"])  # each cloud run starts empty
     doc = run(["scan.py", "orb", "--json", "--max-confirm", "150"])
     if not doc:
         return "Eröffnung: kein Scan", "Der Ausbruch-Scan lief nicht (Markt zu, zu früh oder keine Daten)."
+    # Diagnostics for the run log: how much of the market the data source answered for.
+    failed = doc.get("failed") or {}
+    print("universe: %s" % ((uni or {}).get("count")), file=sys.stderr)
+    print("orb counts: %s" % json.dumps(doc.get("counts", {})), file=sys.stderr)
+    print("orb failed: %d, e.g. %s" % (len(failed), json.dumps(dict(list(failed.items())[:5]))
+                                        if isinstance(failed, dict) else str(failed)[:300]), file=sys.stderr)
+    coverage = doc.get("counts", {}).get("scanned", 0)
     c = doc.get("counts", {})
     r_mult = cfg.get("target_r", 2)
     rows = []
@@ -296,6 +304,9 @@ def opening(cfg):
              "%s von %s Aktien sind ausgebrochen, %d %s zu deinen Regeln. 1 € = %s $." % (
                  c.get("hits", len(doc.get("hits", []))), c.get("scanned", "?"), len(rows),
                  "passt" if len(rows) == 1 else "passen", ("%.4f" % RATE).replace(".", ","))]
+    if coverage < 1000:
+        lines.append("ACHTUNG: Heute konnten nur %s Aktien geprüft werden (die kostenlose Datenquelle hat "
+                     "geblockt). Die Liste ist deshalb unvollständig." % coverage)
     if not rows:
         lines.append("Heute passt keine (max %g € Verlust, %g-%g € pro Aktie). Kein Trade ist auch ok." % (
             cfg.get("max_loss_per_trade_eur", 20), cfg.get("min_share_price_eur", 6),
