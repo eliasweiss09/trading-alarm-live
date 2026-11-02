@@ -538,14 +538,22 @@ def send(title, message, priority=3):
 
 def pick_mode(now_et):
     t = now_et.time()
-    # Narrow windows: the cron fires twice per slot (summer and winter UTC),
-    # 40 minutes or more apart, and only the run near 8:15 or 9:55 New York
-    # time may send. They allow up to 30 minutes of GitHub delay.
-    if datetime.time(7, 45) <= t < datetime.time(8, 45):
+    # Wide windows: GitHub often starts scheduled runs 45 minutes late or more.
+    # A second run in the same window is skipped by already_sent().
+    if datetime.time(7, 30) <= t < datetime.time(9, 30):
         return "premarket"
-    if datetime.time(9, 50) <= t < datetime.time(10, 25):
+    if datetime.time(9, 30) <= t < datetime.time(11, 45):
         return "open"
     return None
+
+
+def already_sent(mode):
+    """True when today's pre-market list or breakout list already went out."""
+    prefix, failed = {"premarket": ("Vorbörse:", "fehlgeschlagen"),
+                      "open": ("Eröffnung:", "kein Scan")}.get(mode, (None, None))
+    if not prefix:
+        return False
+    return any(t.startswith(prefix) and failed not in t for t in sent_titles())
 
 
 def main():
@@ -578,6 +586,15 @@ def main():
     if mode is None:
         print("Outside the windows at %s ET: nothing to do." % now_et.strftime("%H:%M"))
         return 0
+    if a.mode == "auto" and already_sent(mode):
+        print("The %s list already went out today: nothing to do." % mode)
+        return 0
+    if mode == "open":
+        # Started early: wait for the 15-minute range plus one complete 5-minute bar.
+        ready = now_et.replace(hour=9, minute=50, second=30, microsecond=0)
+        if now_et < ready:
+            print("Waiting until 9:50 ET for the opening range.")
+            time.sleep((ready - now_et).total_seconds())
     RATE = eur_rate()
     if mode != "growth":
         send(*(premarket(cfg) if mode == "premarket" else opening(cfg)))

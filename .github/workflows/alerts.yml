@@ -8,9 +8,11 @@ name: Trading alerts
 #   8:15 New York  pre-market lists                  12:15 / 13:15 UTC
 #   9:55 New York  breakouts, then sell checks every minute until 13:00
 #                                                    13:55 / 14:55 UTC
-#  12:55 New York  sell checks every minute until 16:00
-#                                                    16:55 / 17:55 UTC
-# GitHub often starts scheduled runs 5 to 15 minutes late.
+#  13:00 New York  sell checks every minute until 16:00. The morning run starts
+#                  this one itself (no delay). The 16:55 / 17:55 UTC slots are a
+#                  fallback in case that hand-off fails.
+# GitHub often starts scheduled runs 45 minutes late or more, so alert.py
+# accepts wide windows and skips a list that already went out.
 on:
   schedule:
     - cron: "15 12,13 * * 1-5"
@@ -21,16 +23,27 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "auto, premarket, open, growth or test"
+        description: "auto, premarket, open, growth, test or afternoon"
         default: "test"
+
+# One alert run at a time, so two runs never send the same alert.
+# Test pushes run on their own.
+concurrency:
+  group: ${{ github.event_name == 'push' && format('test-{0}', github.run_id) || 'alerts' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write   # the morning run starts the afternoon run
 
 jobs:
   alert:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 300
     env:
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      AFTERNOON: ${{ github.event.schedule == '55 16,17 * * 1-5' || github.event.inputs.mode == 'afternoon' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,7 +59,7 @@ jobs:
           key: today-${{ steps.day.outputs.day }}
 
       - name: Lists and breakouts
-        if: github.event.schedule != '55 16,17 * * 1-5'
+        if: env.AFTERNOON != 'true'
         env:
           MODE: >-
             ${{ github.event_name == 'push' && 'test' || github.event.inputs.mode || 'auto' }}
@@ -60,7 +73,12 @@ jobs:
       - name: Sell checks every minute until 13:00 New York
         if: hashFiles('trader/opened.flag') != ''
         run: python alert.py --mode watch --until 13:00
+      - name: Start the afternoon sell checks
+        if: ${{ !cancelled() && hashFiles('trader/opened.flag') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run alerts.yml --ref "${{ github.ref_name }}" -f mode=afternoon
 
       - name: Sell checks every minute until 16:00 New York
-        if: github.event.schedule == '55 16,17 * * 1-5'
-        run: python alert.py --mode watch --until 16:00 --start-between 12:45-13:30
+        if: env.AFTERNOON == 'true'
+        run: python alert.py --mode watch --until 16:00 --start-between 11:00-15:55
