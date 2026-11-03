@@ -4,6 +4,8 @@ trader/universe.txt
 trader/watchlist.json
 trader/today.json
 trader/opened.flag
+trader/today-eu.json
+trader/opened-eu.flag
 trader/prices.json
 trader/orders.json
 trader/plan.json

@@ -268,7 +268,10 @@ def yahoo_get(path):
 
 
 def to_yahoo(sym):
-    return sym.upper().replace(".", "-")
+    s = sym.upper()
+    if re.search(r"\.[A-Z]{2,3}$", s):   # an exchange suffix (SAP.DE, MC.PA) stays
+        return s
+    return s.replace(".", "-")           # a share class (BRK.B) becomes BRK-B
 
 
 def spark_path(symbols, rng, interval):

@@ -1,0 +1,121 @@
+# European stocks Trade Republic offers: DAX, MDAX, EURO STOXX 50. SYMBOL|name|sector|index
+# Source: Wikipedia, read 2026-11-03. Rebuild: py -3 tools/indexlist.py
+8TRA.DE|Traton||MDAX
+ABI.BR|Anheuser-Busch InBev|Consumer Staples|EURO STOXX 50
+AD.AS|Ahold Delhaize|Consumer Staples|EURO STOXX 50
+ADS.DE|Adidas|Apparel|DAX
+ADYEN.AS|Adyen|Financials|EURO STOXX 50
+AFX.DE|Carl Zeiss Meditec|Medical technology|MDAX
+AI.PA|Air Liquide|Materials|EURO STOXX 50
+AIR.PA|Airbus|Aerospace & Defence|DAX
+AIXA.DE|Aixtron|Semiconductor industry|MDAX
+ALV.DE|Allianz|Financial Services|DAX
+ARGX.BR|Argenx|Health Care|EURO STOXX 50
+ASML.AS|ASML Holding|Information Technology|EURO STOXX 50
+AT1.DE|Aroundtown|Real estate|MDAX
+BAS.DE|BASF|Chemicals|DAX
+BAYN.DE|Bayer|Pharmaceuticals|DAX
+BBVA.MC|BBVA|Financials|EURO STOXX 50
+BC8.DE|Bechtle|IT services|MDAX
+BEI.DE|Beiersdorf|Consumer goods|DAX
+BFSA.DE|Befesa|Waste management|MDAX
+BMW.DE|BMW|Automotive|DAX
+BN.PA|Danone|Consumer Staples|EURO STOXX 50
+BNP.PA|BNP Paribas|Financials|EURO STOXX 50
+BNR.DE|Brenntag|Distribution|DAX
+BOSS.DE|Hugo Boss|Clothing, Accessories|MDAX
+CBK.DE|Commerzbank|Financial Services|DAX
+CON.DE|Continental|Automotive|DAX
+CS.PA|Axa|Financials|EURO STOXX 50
+DB1.DE|Deutsche Börse|Financial Services|DAX
+DBK.DE|Deutsche Bank|Financial Services|DAX
+DG.PA|Vinci SA|Industrials|EURO STOXX 50
+DHER.DE|Delivery Hero|Delivery service|MDAX
+DHL.DE|Deutsche Post|Logistics|DAX
+DTE.DE|Deutsche Telekom|Telecommunication|DAX
+DTG.DE|Daimler Truck|Automotive|DAX
+ECV.DE|Encavis|Renewable energy|MDAX
+EL.PA|EssilorLuxottica|Health Care|EURO STOXX 50
+ENEL.MI|Enel|Utilities|EURO STOXX 50
+ENGI.PA|Engie|Utilities|EURO STOXX 50
+ENI.MI|Eni|Energy|EURO STOXX 50
+ENR.DE|Siemens Energy|Energy technology|DAX
+EOAN.DE|E.ON|Utilities|DAX
+EVD.DE|CTS Eventim|Leisure-events|MDAX
+EVK.DE|Evonik|Chemistry|MDAX
+EVT.DE|Evotec|Biotechnology|MDAX
+FME.DE|Fresenius Medical Care|Healthcare|DAX
+FNTN.DE|Freenet|Telecommunications|MDAX
+FPE3.DE|Fuchs Petrolub|Chemistry|MDAX
+FRA.DE|Fraport|Airport operator|MDAX
+FRE.DE|Fresenius|Healthcare|DAX
+G1A.DE|GEA Group|Mechanical Engineering|DAX
+G24.DE|Scout24|E-Commerce|DAX
+GBF.DE|Bilfinger||MDAX
+GXI.DE|Gerresheimer|Packaging|MDAX
+HAG.DE|Hensoldt|Defence|MDAX
+HEI.DE|Heidelberg Materials|Construction Materials|DAX
+HEN3.DE|Henkel|Consumer Goods|DAX
+HFG.DE|HelloFresh|Meal kit|MDAX
+HLE.DE|Hella|Automotive|MDAX
+HNR1.DE|Hannover Re|Insurance|DAX
+HOT.DE|Hochtief|Construction|MDAX
+IBE.MC|Iberdrola|Utilities|EURO STOXX 50
+IFX.DE|Infineon Technologies|Technology|DAX
+INGA.AS|ING Group|Financials|EURO STOXX 50
+ISP.MI|Intesa Sanpaolo|Financials|EURO STOXX 50
+ITX.MC|Inditex|Consumer Discretionary|EURO STOXX 50
+JEN.DE|Jenoptik||MDAX
+JUN3.DE|Jungheinrich|Intralogistics, Mechanical engineering|MDAX
+KBX.DE|Knorr-Bremse|Manufacturing|MDAX
+KGX.DE|KION Group|Handling equipment|MDAX
+KRN.DE|Krones||MDAX
+LEG.DE|LEG Immobilien|Real estate|MDAX
+LHA.DE|Lufthansa|Airlines|MDAX
+LXS.DE|Lanxess|Chemistry|MDAX
+MBG.DE|Mercedes-Benz Group|Automotive|DAX
+MC.PA|LVMH Moët Hennessy Louis Vuitton|Consumer Discretionary|EURO STOXX 50
+MRK.DE|Merck|Pharmaceuticals|DAX
+MTX.DE|MTU Aero Engines|Aerospace & Defence|DAX
+MUV2.DE|Munich Re|Financial Services|DAX
+NDA.DE|Aurubis|Metals|MDAX
+NDX1.DE|Nordex||MDAX
+NEM.DE|Nemetschek|Software|MDAX
+NOKIA.HE|Nokia|Information Technology|EURO STOXX 50
+OR.PA|L'Oréal|Consumer Staples|EURO STOXX 50
+PAH3.DE|Porsche SE|Automotive|DAX
+PRX.AS|Prosus|Consumer Discretionary|EURO STOXX 50
+PUM.DE|Puma|Sports equipment|MDAX
+QIA.DE|Qiagen|Biotech|DAX
+RAA.DE|Rational|Manufacturing|MDAX
+RACE.MI|Ferrari|Consumer Discretionary|EURO STOXX 50
+RDC.DE|Redcare Pharmacy|Pharmacy|MDAX
+RHM.DE|Rheinmetall|Aerospace & Defence|DAX
+RMS.PA|Hermès|Consumer Discretionary|EURO STOXX 50
+RRTL.DE|RTL Group|Media|MDAX
+RWE.DE|RWE|Utilities|DAX
+SAF.PA|Safran|Industrials|EURO STOXX 50
+SAN.MC|Banco Santander|Financials|EURO STOXX 50
+SAN.PA|Sanofi|Health Care|EURO STOXX 50
+SAP.DE|SAP|Technology|DAX
+SAX.DE|Ströer|Media|MDAX
+SDF.DE|K+S|Mining (fertilizer and salt)|MDAX
+SGO.PA|Saint-Gobain|Industrials|EURO STOXX 50
+SHL.DE|Siemens Healthineers|Medical Equipment|DAX
+SIE.DE|Siemens|Industrials|DAX
+STM.DE|Stabilus|Automotive|MDAX
+SU.PA|Schneider Electric|Industrials|EURO STOXX 50
+SY1.DE|Symrise|Chemicals|DAX
+TEG.DE|TAG Tegernsee Immobilien und Beteiligung|Real estate|MDAX
+TKA.DE|ThyssenKrupp|Conglomerate|MDAX
+TLX.DE|Talanx|Real Estate|MDAX
+TMV.DE|TeamViewer|Software|MDAX
+TTE.PA|TotalEnergies|Energy|EURO STOXX 50
+TUI1.DE|TUI|Tourism|MDAX
+UCG.MI|UniCredit|Financials|EURO STOXX 50
+UTDI.DE|United Internet|Telecommunications|MDAX
+VNA.DE|Vonovia|Real Estate|DAX
+VOW3.DE|Volkswagen Group|Automotive|DAX
+WAF.DE|Siltronic|Semiconductor industry|MDAX
+WCH.DE|Wacker Chemie|Chemistry|MDAX
+ZAL.DE|Zalando|E-Commerce|DAX

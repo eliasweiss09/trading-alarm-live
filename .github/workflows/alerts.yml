@@ -43,6 +43,7 @@ jobs:
     env:
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      ACCOUNTS: ${{ secrets.ACCOUNTS }}   # money and loss limits per account, kept private
       AFTERNOON: ${{ github.event.schedule == '55 16,17 * * 1-5' || github.event.inputs.mode == 'afternoon' }}
     steps:
       - uses: actions/checkout@v4
@@ -58,12 +59,31 @@ jobs:
           path: trader/today.json
           key: today-${{ steps.day.outputs.day }}
 
+      # Pelosi reports already pushed and her latest trade per ticker, kept from run to run.
+      - uses: actions/cache/restore@v4
+        with:
+          path: trader/state/pelosi-seen.json
+          key: pelosi-${{ github.run_id }}
+          restore-keys: pelosi-
+      - name: Install the PDF reader (Pelosi reports)
+        if: github.event.schedule == '15 12,13 * * 1-5' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: sudo apt-get install -y -qq poppler-utils > /dev/null
+
       - name: Lists and breakouts
         if: env.AFTERNOON != 'true'
         env:
           MODE: >-
             ${{ github.event_name == 'push' && 'test' || github.event.inputs.mode || 'auto' }}
         run: python alert.py --mode "$MODE"
+      - uses: actions/cache/save@v4
+        if: >-
+          ${{ !cancelled() && hashFiles('trader/state/pelosi-seen.json') != '' &&
+          (github.event.schedule == '15 12,13 * * 1-5' || github.event_name == 'workflow_dispatch') }}
+        continue-on-error: true
+        with:
+          path: trader/state/pelosi-seen.json
+          key: pelosi-${{ github.run_id }}
       - uses: actions/cache/save@v4
         if: hashFiles('trader/opened.flag') != ''
         continue-on-error: true

@@ -1,0 +1,79 @@
+name: Trading alerts Europe
+
+# European stocks (DAX, MDAX, EURO STOXX 50), Austrian time. Xetra trades 9:00 to 17:30.
+# GitHub cron runs in UTC; each slot appears twice so it hits the same Austrian
+# time in summer and winter. europe.py skips the run that is off.
+#   7:20  pre-market list (Trade Republic opens at 7:30)          5:20 / 6:20 UTC
+#   9:20  breakouts, then sell checks every minute until 13:00   7:20 / 8:20 UTC
+#  13:00  sell checks every minute until 17:30. The morning run starts this one
+#         itself; the 11:05 / 12:05 UTC slots are a fallback.
+on:
+  schedule:
+    - cron: "20 5,6 * * 1-5"
+    - cron: "20 7,8 * * 1-5"
+    - cron: "5 11,12 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "auto, premarket, open or afternoon"
+        default: "auto"
+
+# One Europe run at a time (the US runs have their own group).
+concurrency:
+  group: alerts-eu
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write   # the morning run starts the afternoon run
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      ACCOUNTS: ${{ secrets.ACCOUNTS }}   # money and loss limits per account, kept private
+      AFTERNOON: ${{ github.event.schedule == '5 11,12 * * 1-5' || github.event.inputs.mode == 'afternoon' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Austrian date
+        id: day
+        run: echo "day=$(TZ=Europe/Vienna date +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4   # Pelosi's latest trade per ticker (saved by the US runs)
+        with:
+          path: trader/state/pelosi-seen.json
+          key: pelosi-none
+          restore-keys: pelosi-
+      - uses: actions/cache/restore@v4
+        with:
+          path: trader/today-eu.json
+          key: today-eu-${{ steps.day.outputs.day }}
+
+      - name: Lists and breakouts
+        if: env.AFTERNOON != 'true'
+        env:
+          MODE: ${{ github.event.inputs.mode || 'auto' }}
+        run: python europe.py --mode "$MODE"
+      - uses: actions/cache/save@v4
+        if: hashFiles('trader/opened-eu.flag') != ''
+        continue-on-error: true
+        with:
+          path: trader/today-eu.json
+          key: today-eu-${{ steps.day.outputs.day }}
+      - name: Sell checks every minute until 13:00
+        if: hashFiles('trader/opened-eu.flag') != ''
+        run: python europe.py --mode watch --until 13:00
+      - name: Start the afternoon sell checks
+        if: ${{ !cancelled() && hashFiles('trader/opened-eu.flag') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run alerts-eu.yml --ref "${{ github.ref_name }}" -f mode=afternoon
+
+      - name: Sell checks every minute until 17:30
+        if: env.AFTERNOON == 'true'
+        run: python europe.py --mode watch --until 17:30 --start-between 11:00-17:25
